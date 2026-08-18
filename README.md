@@ -2,6 +2,8 @@
 
 Bounty adjudication by validator jury. No oracle, no human reviewer.
 
+![First live verdict from the validator jury](verdict.png)
+
 **[Live demo](https://makabeez.github.io/bountycourt-app/)** · Deployed on GenLayer Bradbury at [`0xB639F012931a5174Fa8277762bE03bfC6645126E`](https://makabeez.github.io/bountycourt-app/)
 
 ## What it does
