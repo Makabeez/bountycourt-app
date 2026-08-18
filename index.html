@@ -169,8 +169,8 @@ $("conn").onclick = async () => {
   try {
     const [a] = await provider.request({ method: "eth_requestAccounts" });
     account = a;
-    writeClient = createClient({ chain: testnetBradbury, account: a, provider });
-    await writeClient.connect("testnetBradbury");
+    try { await writeClient.connect("testnetBradbury"); }
+    catch (e) { log("chain switch skipped: " + (e.message || e)); }
     $("conn").textContent = "Connected";
     log("connected " + a + " via " + name);
     status(false);
