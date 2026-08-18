@@ -16,7 +16,7 @@ h1{font-size:22px;font-weight:500;margin:0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px}
 h2{font-size:15px;font-weight:500;margin:0 0 14px}
 label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
-input,textarea{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit;font-size:14px}
+input,textarea,select{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit;font-size:14px}
 textarea{min-height:64px;resize:vertical}
 button{background:var(--fg);color:var(--bg);border:0;border-radius:8px;padding:9px 16px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;margin-top:14px}
 button.ghost{background:none;color:var(--fg);border:1px solid var(--line)}
@@ -33,18 +33,23 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .b p{margin:4px 0;font-size:13px;color:var(--muted);word-break:break-word}
 .v{font-size:13px;margin-top:8px;padding:9px 11px;border-radius:8px;background:var(--bg);border:1px solid var(--line)}
 .log{font:12px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);white-space:pre-wrap;max-height:200px;overflow:auto}
-.bar{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.bar{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
 .sp{width:16px;height:16px;flex:none}
 .mono{font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
 details summary{cursor:pointer;font-size:13px;color:var(--muted);margin-top:10px}
 pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;font-size:12px;max-height:280px}
+#wsel{width:auto;min-width:150px;padding:6px 10px;font-size:13px}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
   <h1>BountyCourt</h1>
-  <div class="bar"><span id="net">not connected</span><button class="ghost" id="conn" style="margin:0">Connect wallet</button></div>
+  <div class="bar">
+    <span id="net">not connected</span>
+    <select id="wsel"><option>detecting wallets…</option></select>
+    <button class="ghost" id="conn" style="margin:0">Connect wallet</button>
+  </div>
 </header>
 <p class="sub">Bounties adjudicated by a validator jury on GenLayer Bradbury. Evidence is fetched from the live web and judged against plain-English criteria — no oracle, no human reviewer.</p>
 
@@ -108,6 +113,41 @@ const SPINNER = `<svg class="sp" viewBox="0 0 48 48"><style>.ring{transform-orig
 const readClient = createClient({ chain: testnetBradbury });
 let writeClient = null, account = null, contract = null, source = null;
 
+// ---------- EIP-6963 wallet discovery ----------
+// Multiple extensions fight over window.ethereum and clobber each other.
+// EIP-6963 lets every wallet announce itself so the user picks explicitly.
+const wallets = new Map();
+
+function renderWallets() {
+  const sel = $("wsel");
+  const found = [...wallets.values()];
+  if (!found.length) {
+    sel.innerHTML = window.ethereum
+      ? '<option value="legacy">injected wallet</option>'
+      : "<option>no wallet detected</option>";
+    return;
+  }
+  sel.innerHTML = found.map(w => `<option value="${esc(w.info.uuid)}">${esc(w.info.name)}</option>`).join("");
+}
+
+window.addEventListener("eip6963:announceProvider", e => {
+  if (!wallets.has(e.detail.info.uuid)) {
+    wallets.set(e.detail.info.uuid, e.detail);
+    log("wallet detected: " + e.detail.info.name);
+    renderWallets();
+  }
+});
+window.dispatchEvent(new Event("eip6963:requestProvider"));
+setTimeout(renderWallets, 400);
+
+function chosenProvider() {
+  const v = $("wsel").value;
+  if (v && wallets.has(v)) return { provider: wallets.get(v).provider, name: wallets.get(v).info.name };
+  if (window.ethereum) return { provider: window.ethereum, name: "injected" };
+  return { provider: null, name: null };
+}
+
+// ---------- contract source ----------
 fetch("bounty_court.py")
   .then(r => r.ok ? r.text() : Promise.reject(new Error("HTTP " + r.status)))
   .then(t => { source = t; $("src").textContent = t; gate(false); log("contract source loaded (" + t.length + " bytes)"); })
@@ -124,16 +164,18 @@ function status(busy, msg) {
 }
 
 $("conn").onclick = async () => {
-  if (!window.ethereum) return log("no injected wallet found");
+  const { provider, name } = chosenProvider();
+  if (!provider) return log("no wallet provider available — install or enable one");
   try {
-    const [a] = await window.ethereum.request({ method: "eth_requestAccounts" });
+    const [a] = await provider.request({ method: "eth_requestAccounts" });
     account = a;
-    writeClient = createClient({ chain: testnetBradbury, account: a, provider: window.ethereum });
+    writeClient = createClient({ chain: testnetBradbury, account: a, provider });
     await writeClient.connect("testnetBradbury");
     $("conn").textContent = "Connected";
-    log("connected " + a + " on bradbury");
+    log("connected " + a + " via " + name);
     status(false);
-  } catch (e) { log("connect failed: " + e.message); }
+    provider.on?.("accountsChanged", accs => { account = accs[0] || null; status(false); log("account changed"); });
+  } catch (e) { log("connect failed: " + (e.message || e)); }
 };
 
 $("deploy").onclick = async () => {
@@ -146,13 +188,13 @@ $("deploy").onclick = async () => {
     const receipt = await readClient.waitForTransactionReceipt({ hash, status: "ACCEPTED", interval: 4000, retries: 200 });
     // Bradbury returns the address in txDataDecoded; other networks use data.contract_address
     const addr = receipt?.txDataDecoded?.contractAddress || receipt?.data?.contract_address;
-    if (!addr) { log("deployed but no address found in receipt: " + JSON.stringify(receipt).slice(0, 400)); status(false); return; }
+    if (!addr) { log("deployed but no address in receipt: " + JSON.stringify(receipt).slice(0, 400)); status(false); return; }
     $("addr").value = addr;
     localStorage.setItem("bc_addr", addr);
     log("DEPLOYED at " + addr);
     status(false);
     loadCourt();
-  } catch (e) { log("deploy failed: " + e.message); status(false); }
+  } catch (e) { log("deploy failed: " + (e.message || e)); status(false); }
 };
 
 async function loadCourt() {
@@ -166,7 +208,7 @@ async function loadCourt() {
     log("loaded court: " + name);
     gate(false);
     refresh();
-  } catch (e) { log("load failed: " + e.message); }
+  } catch (e) { log("load failed: " + (e.message || e)); }
 }
 $("load").onclick = loadCourt;
 
@@ -180,7 +222,7 @@ async function send(fn, args, label) {
     log(fn + " accepted by consensus");
     status(false);
     refresh();
-  } catch (e) { log(fn + " failed: " + e.message); status(false); }
+  } catch (e) { log(fn + " failed: " + (e.message || e)); status(false); }
 }
 
 $("post").onclick = () => send("post_bounty",
@@ -205,7 +247,7 @@ async function refresh() {
         ${b.verdict ? `<div class="v">${esc(b.verdict)}</div>` : ""}
       </div>`;
     }).join("");
-  } catch (e) { log("refresh failed: " + e.message); }
+  } catch (e) { log("refresh failed: " + (e.message || e)); }
 }
 
 const saved = localStorage.getItem("bc_addr");
