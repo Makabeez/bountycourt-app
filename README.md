@@ -2,7 +2,7 @@
 
 Bounty adjudication by validator jury. No oracle, no human reviewer.
 
-![Per-criterion jury ruling](verdict.png)
+![Per-criterion jury ruling](verdict-v2.png)
 
 **[Live demo](https://makabeez.github.io/bountycourt-app/)**
 
