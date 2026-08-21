@@ -9,36 +9,40 @@
 @media(prefers-color-scheme:dark){:root{--bg:#131312;--fg:#F1EFE8;--muted:#8E8D86;--card:#1E1E1C;--line:#2E2E2B}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;padding:40px 20px}
-.wrap{max-width:820px;margin:0 auto}
+.wrap{max-width:860px;margin:0 auto}
 header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
 h1{font-size:22px;font-weight:500;margin:0}
-.sub{color:var(--muted);margin:0 0 28px;font-size:14px}
+.sub{color:var(--muted);margin:0 0 24px;font-size:14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px}
 h2{font-size:15px;font-weight:500;margin:0 0 14px}
 label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
 input,textarea,select{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit;font-size:14px}
-textarea{min-height:64px;resize:vertical}
+textarea{min-height:70px;resize:vertical}
 button{background:var(--fg);color:var(--bg);border:0;border-radius:8px;padding:9px 16px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;margin-top:14px}
 button.ghost{background:none;color:var(--fg);border:1px solid var(--line)}
 button:disabled{opacity:.45;cursor:not-allowed}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:640px){.grid{grid-template-columns:1fr}}
+@media(max-width:680px){.grid{grid-template-columns:1fr}}
 .pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:20px;border:1px solid var(--line);color:var(--muted)}
 .pill.APPROVED{color:var(--ok);border-color:var(--ok)}
 .pill.REJECTED{color:var(--no);border-color:var(--no)}
-.pill.SUBMITTED{color:var(--wait);border-color:var(--wait)}
+.pill.SUBMITTED,.pill.OPEN{color:var(--wait);border-color:var(--wait)}
 .b{border-top:1px solid var(--line);padding:14px 0}
 .b:first-of-type{border-top:0}
-.b h3{font-size:14px;font-weight:500;margin:0 0 4px;display:flex;gap:10px;align-items:center}
+.b h3{font-size:14px;font-weight:500;margin:0 0 6px;display:flex;gap:10px;align-items:center}
 .b p{margin:4px 0;font-size:13px;color:var(--muted);word-break:break-word}
+.rul{margin-top:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.rul div{display:flex;gap:10px;padding:7px 11px;font-size:13px;border-top:1px solid var(--line)}
+.rul div:first-child{border-top:0}
+.rul .y{color:var(--ok)}
+.rul .n{color:var(--no)}
 .v{font-size:13px;margin-top:8px;padding:9px 11px;border-radius:8px;background:var(--bg);border:1px solid var(--line)}
-.log{font:12px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);white-space:pre-wrap;max-height:200px;overflow:auto}
+.log{font:12px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);white-space:pre-wrap;max-height:220px;overflow:auto}
 .bar{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
 .sp{width:16px;height:16px;flex:none}
 .mono{font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
-details summary{cursor:pointer;font-size:13px;color:var(--muted);margin-top:10px}
-pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;font-size:12px;max-height:280px}
-#wsel{width:auto;min-width:150px;padding:6px 10px;font-size:13px}
+#wsel{width:auto;min-width:140px;padding:6px 10px;font-size:13px}
+.note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -47,26 +51,19 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
   <h1>BountyCourt</h1>
   <div class="bar">
     <span id="net">not connected</span>
-    <select id="wsel"><option>detecting wallets…</option></select>
-    <button class="ghost" id="conn" style="margin:0">Connect wallet</button>
+    <select id="wsel"><option>detecting…</option></select>
+    <button class="ghost" id="conn" style="margin:0">Connect</button>
   </div>
 </header>
-<p class="sub">Bounties adjudicated by a validator jury on GenLayer Bradbury. Evidence is fetched from the live web and judged against plain-English criteria — no oracle, no human reviewer.</p>
+<p class="sub">Bounties adjudicated by a validator jury on GenLayer Bradbury. Each acceptance criterion is judged separately and every validator must agree on every one before anything is written.</p>
 
 <div class="card">
-  <h2>1 · Deploy a court</h2>
-  <label>Court name</label>
-  <input id="cname" placeholder="Makabeez Bounty Court">
-  <button id="deploy" disabled>Deploy to Bradbury</button>
-  <details><summary>View contract source</summary><pre id="src">loading bounty_court.py…</pre></details>
-</div>
-
-<div class="card">
-  <h2>2 · Or load an existing court</h2>
+  <h2>Load a court</h2>
   <label>Contract address</label>
-  <input id="addr" placeholder="0x…" spellcheck="false">
+  <input id="addr" value="0x6D42B33aCd70F0B1Cec0f56A474725727F3dF50e" spellcheck="false">
   <button id="load">Load court</button>
   <div class="bar" style="margin-top:12px"><span id="court">—</span></div>
+  <p class="note">v2 (per-criterion consensus) is prefilled. v1, with a single verdict, is at 0xB639F012931a5174Fa8277762bE03bfC6645126E.</p>
 </div>
 
 <div class="grid">
@@ -74,24 +71,27 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
     <h2>Post a bounty</h2>
     <label>ID</label><input id="pid" placeholder="rust-cli-1">
     <label>Brief</label><textarea id="pbrief" placeholder="Ship a Rust CLI that mints an NFT"></textarea>
-    <label>Acceptance criteria</label><textarea id="pcrit" placeholder="repo must contain a Cargo.toml, a README with install steps, and at least one integration test"></textarea>
+    <label>Acceptance criteria — one per line</label>
+    <textarea id="pcrit" placeholder="the repository contains a file named Cargo.toml&#10;the repository contains a directory named src"></textarea>
     <label>Reward</label><input id="prew" placeholder="500">
     <button id="post" disabled>Post bounty</button>
+    <p class="note">Write each criterion as an objective statement about what exists. Point evidence at structured data — api.github.com, not a rendered page.</p>
   </div>
   <div class="card">
     <h2>Submit evidence</h2>
     <label>Bounty ID</label><input id="sid" placeholder="rust-cli-1">
-    <label>Evidence URL</label><input id="surl" placeholder="https://github.com/…" spellcheck="false">
+    <label>Evidence URL</label><input id="surl" placeholder="https://api.github.com/repos/…" spellcheck="false">
     <button id="sub" disabled>Submit</button>
-    <h2 style="margin-top:24px">Adjudicate</h2>
+    <h2 style="margin-top:26px">Adjudicate</h2>
     <label>Bounty ID</label><input id="aid" placeholder="rust-cli-1">
     <button id="adj" disabled>Convene the jury</button>
+    <p class="note">Adjudication runs two non-deterministic blocks across every validator. Expect 30+ minutes.</p>
   </div>
 </div>
 
 <div class="card">
   <h2>Bounties <button class="ghost" id="refresh" style="margin:0;padding:4px 10px;font-size:12px;float:right">Refresh</button></h2>
-  <div id="list"><p class="sub" style="margin:0">Deploy or load a court to see bounties.</p></div>
+  <div id="list"><p class="sub" style="margin:0">Load a court to see bounties.</p></div>
 </div>
 
 <div class="card">
@@ -111,50 +111,31 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "
 const SPINNER = `<svg class="sp" viewBox="0 0 48 48"><style>.ring{transform-origin:24px 24px;animation:r 2.4s linear infinite}.v{animation:v 1.8s ease-in-out infinite}@keyframes r{to{transform:rotate(360deg)}}@keyframes v{0%,20%{opacity:.18}35%,60%{opacity:1}75%,100%{opacity:.18}}</style><g class="ring" fill="currentColor"><circle class="v" cx="24" cy="9" r="3.4"/><circle class="v" cx="37" cy="16.5" r="3.4" style="animation-delay:.15s"/><circle class="v" cx="37" cy="31.5" r="3.4" style="animation-delay:.3s"/><circle class="v" cx="24" cy="39" r="3.4" style="animation-delay:.45s"/><circle class="v" cx="11" cy="31.5" r="3.4" style="animation-delay:.6s"/><circle class="v" cx="11" cy="16.5" r="3.4" style="animation-delay:.75s"/></g></svg>`;
 
 const readClient = createClient({ chain: testnetBradbury });
-let writeClient = null, account = null, contract = null, source = null;
+let writeClient = null, account = null, contract = null;
 
 // ---------- EIP-6963 wallet discovery ----------
-// Multiple extensions fight over window.ethereum and clobber each other.
-// EIP-6963 lets every wallet announce itself so the user picks explicitly.
+// Several extensions fight over window.ethereum and clobber each other.
+// 6963 lets each announce itself so the user picks one explicitly.
 const wallets = new Map();
-
 function renderWallets() {
-  const sel = $("wsel");
   const found = [...wallets.values()];
-  if (!found.length) {
-    sel.innerHTML = window.ethereum
-      ? '<option value="legacy">injected wallet</option>'
-      : "<option>no wallet detected</option>";
-    return;
-  }
-  sel.innerHTML = found.map(w => `<option value="${esc(w.info.uuid)}">${esc(w.info.name)}</option>`).join("");
+  $("wsel").innerHTML = found.length
+    ? found.map(w => `<option value="${esc(w.info.uuid)}">${esc(w.info.name)}</option>`).join("")
+    : (window.ethereum ? '<option value="legacy">injected</option>' : "<option>no wallet</option>");
 }
-
 window.addEventListener("eip6963:announceProvider", e => {
-  if (!wallets.has(e.detail.info.uuid)) {
-    wallets.set(e.detail.info.uuid, e.detail);
-    log("wallet detected: " + e.detail.info.name);
-    renderWallets();
-  }
+  if (!wallets.has(e.detail.info.uuid)) { wallets.set(e.detail.info.uuid, e.detail); renderWallets(); }
 });
 window.dispatchEvent(new Event("eip6963:requestProvider"));
 setTimeout(renderWallets, 400);
 
-function chosenProvider() {
+function chosen() {
   const v = $("wsel").value;
-  if (v && wallets.has(v)) return { provider: wallets.get(v).provider, name: wallets.get(v).info.name };
-  if (window.ethereum) return { provider: window.ethereum, name: "injected" };
-  return { provider: null, name: null };
+  if (v && wallets.has(v)) return { p: wallets.get(v).provider, n: wallets.get(v).info.name };
+  return { p: window.ethereum || null, n: "injected" };
 }
 
-// ---------- contract source ----------
-fetch("bounty_court.py")
-  .then(r => r.ok ? r.text() : Promise.reject(new Error("HTTP " + r.status)))
-  .then(t => { source = t; $("src").textContent = t; gate(false); log("contract source loaded (" + t.length + " bytes)"); })
-  .catch(e => { $("src").textContent = "could not load bounty_court.py — " + e.message; log("source load failed: " + e.message); });
-
 function gate(busy) {
-  $("deploy").disabled = busy || !writeClient || !source;
   ["post", "sub", "adj"].forEach(b => $(b).disabled = busy || !writeClient || !contract);
 }
 function status(busy, msg) {
@@ -164,38 +145,56 @@ function status(busy, msg) {
 }
 
 $("conn").onclick = async () => {
-  const { provider, name } = chosenProvider();
-  if (!provider) return log("no wallet provider available — install or enable one");
+  const { p, n } = chosen();
+  if (!p) return log("no wallet available");
   try {
-    const [a] = await provider.request({ method: "eth_requestAccounts" });
+    const [a] = await p.request({ method: "eth_requestAccounts" });
     account = a;
-    writeClient = createClient({ chain: testnetBradbury, account: a, provider });
-    await writeClient.connect("testnetBradbury");
+    writeClient = createClient({ chain: testnetBradbury, account: a, provider: p });
+    // Chain switching is best-effort: if the wallet is already on Bradbury
+    // some providers throw here, and that must not abort the connection.
+    try { await writeClient.connect("testnetBradbury"); }
+    catch (e) { log("chain switch skipped: " + (e.message || e)); }
     $("conn").textContent = "Connected";
-    log("connected " + a + " via " + name);
+    log("connected " + a + " via " + n);
     status(false);
-    provider.on?.("accountsChanged", accs => { account = accs[0] || null; status(false); log("account changed"); });
+    if ($("addr").value.trim()) loadCourt();
   } catch (e) { log("connect failed: " + (e.message || e)); }
 };
 
-$("deploy").onclick = async () => {
-  const name = $("cname").value.trim();
-  if (!name) return log("give the court a name");
-  status(true, "deploying");
+// ---------- polling ----------
+// waitForTransactionReceipt is unreliable on Bradbury: it has timed out on
+// transactions that had finalized, and returned early reporting NOT_VOTED.
+// Poll getTransaction instead, and verify state separately.
+async function awaitTx(hash, label, maxMin = 60) {
+  const deadline = Date.now() + maxMin * 60000;
+  while (Date.now() < deadline) {
+    await new Promise(r => setTimeout(r, 12000));
+    let tx;
+    try { tx = await readClient.getTransaction({ hash }); } catch { continue; }
+    const s = tx?.statusName, res = tx?.resultName;
+    if (s === "FINALIZED" || s === "ACCEPTED") {
+      log(`${label}: ${s} / ${tx?.txExecutionResultName} / ${res}`);
+      if (res === "DISAGREE") log(`${label}: validators did not agree — no state written`);
+      if (res === "TIMEOUT") log(`${label}: consensus timed out — no state written`);
+      return tx;
+    }
+  }
+  log(`${label}: still pending after ${maxMin} min — check again later`);
+  return null;
+}
+
+async function send(fn, args, label, minutes) {
+  if (!writeClient || !contract) return log("connect a wallet and load a court first");
+  status(true, label);
   try {
-    const hash = await writeClient.deployContract({ code: source, args: [name] });
-    log("deploy tx: " + hash);
-    const receipt = await readClient.waitForTransactionReceipt({ hash, status: "ACCEPTED", interval: 4000, retries: 200 });
-    // Bradbury returns the address in txDataDecoded; other networks use data.contract_address
-    const addr = receipt?.txDataDecoded?.contractAddress || receipt?.data?.contract_address;
-    if (!addr) { log("deployed but no address in receipt: " + JSON.stringify(receipt).slice(0, 400)); status(false); return; }
-    $("addr").value = addr;
-    localStorage.setItem("bc_addr", addr);
-    log("DEPLOYED at " + addr);
+    const hash = await writeClient.writeContract({ address: contract, functionName: fn, args, value: BigInt(0) });
+    log(`${fn} sent: ${hash}`);
+    await awaitTx(hash, fn, minutes);
     status(false);
-    loadCourt();
-  } catch (e) { log("deploy failed: " + (e.message || e)); status(false); }
-};
+    refresh();
+  } catch (e) { log(`${fn} failed: ` + (e.message || e)); status(false); }
+}
 
 async function loadCourt() {
   const a = $("addr").value.trim();
@@ -204,7 +203,6 @@ async function loadCourt() {
   try {
     const name = await readClient.readContract({ address: contract, functionName: "get_court_name", args: [] });
     $("court").innerHTML = esc(name) + ' <span class="mono">' + esc(a) + "</span>";
-    localStorage.setItem("bc_addr", a);
     log("loaded court: " + name);
     gate(false);
     refresh();
@@ -212,23 +210,11 @@ async function loadCourt() {
 }
 $("load").onclick = loadCourt;
 
-async function send(fn, args, label) {
-  if (!writeClient || !contract) return log("connect a wallet and load a court first");
-  status(true, label);
-  try {
-    const hash = await writeClient.writeContract({ address: contract, functionName: fn, args, value: BigInt(0) });
-    log(fn + " sent: " + hash);
-    await readClient.waitForTransactionReceipt({ hash, status: "ACCEPTED", interval: 4000, retries: 200 });
-    log(fn + " accepted by consensus");
-    status(false);
-    refresh();
-  } catch (e) { log(fn + " failed: " + (e.message || e)); status(false); }
-}
-
 $("post").onclick = () => send("post_bounty",
-  [$("pid").value.trim(), $("pbrief").value.trim(), $("pcrit").value.trim(), $("prew").value.trim() || "0"], "posting");
-$("sub").onclick = () => send("submit", [$("sid").value.trim(), $("surl").value.trim()], "submitting");
-$("adj").onclick = () => send("adjudicate", [$("aid").value.trim()], "jury deliberating");
+  [$("pid").value.trim(), $("pbrief").value.trim(), $("pcrit").value.trim(), $("prew").value.trim() || "0"],
+  "posting", 20);
+$("sub").onclick = () => send("submit", [$("sid").value.trim(), $("surl").value.trim()], "submitting", 20);
+$("adj").onclick = () => send("adjudicate", [$("aid").value.trim()], "jury deliberating", 60);
 $("refresh").onclick = () => refresh();
 
 async function refresh() {
@@ -237,21 +223,26 @@ async function refresh() {
     const all = await readClient.readContract({ address: contract, functionName: "list_bounties", args: [] });
     const entries = Object.entries(all || {});
     if (!entries.length) { $("list").innerHTML = '<p class="sub" style="margin:0">No bounties yet.</p>'; return; }
-    $("list").innerHTML = entries.map(([id, raw]) => {
+    $("list").innerHTML = entries.reverse().map(([id, raw]) => {
       const b = JSON.parse(raw);
+      const crit = Array.isArray(b.criteria) ? b.criteria : [b.criteria];
+      const rulings = Array.isArray(b.rulings) ? b.rulings : [];
       return `<div class="b">
         <h3>${esc(id)} <span class="pill ${esc(b.status)}">${esc(b.status)}</span></h3>
         <p>${esc(b.brief)}</p>
-        <p><strong>Criteria:</strong> ${esc(b.criteria)}</p>
+        <p><strong>Criteria:</strong> ${crit.map(c => esc(c)).join(" · ")}</p>
         ${b.evidence_url ? `<p><strong>Evidence:</strong> ${esc(b.evidence_url)}</p>` : ""}
+        ${rulings.length ? `<div class="rul">${rulings.map(r =>
+          `<div><span class="${r.met ? "y" : "n"}">${r.met ? "✓" : "✗"}</span>
+           <span>${esc(crit[r.id] ?? ("criterion " + r.id))}</span>
+           <span style="color:var(--muted);margin-left:auto">${esc(r.reason)}</span></div>`).join("")}</div>` : ""}
         ${b.verdict ? `<div class="v">${esc(b.verdict)}</div>` : ""}
       </div>`;
     }).join("");
   } catch (e) { log("refresh failed: " + (e.message || e)); }
 }
 
-const saved = localStorage.getItem("bc_addr");
-if (saved) $("addr").value = saved;
+loadCourt();
 </script>
 </body>
 </html>
