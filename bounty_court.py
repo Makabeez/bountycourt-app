@@ -140,7 +140,20 @@ class BountyCourt(gl.Contract):
             j = j + 1
 
         approved = len(unmet_texts) == 0
+        escrow = int(bounty["escrow"])
 
+        if approved:
+            recipient = Address(bounty["hunter"])
+            settlement = f"paid {escrow} to hunter"
+        else:
+            recipient = Address(bounty["poster"])
+            settlement = f"refunded {escrow} to poster"
+
+        if escrow > 0:
+            gl.get_contract_at(recipient).emit_transfer(value=u256(escrow), on="finalized")
+
+        bounty["escrow"] = "0"
+        bounty["settlement"] = settlement
         bounty["rulings"] = rulings
         bounty["unmet"] = unmet_texts
         bounty["status"] = "APPROVED" if approved else "REJECTED"
