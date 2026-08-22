@@ -17,12 +17,14 @@ class BountyCourt(gl.Contract):
         self.owner = gl.message.sender_address
         self.court_name = court_name
 
-    @gl.public.write
+    @gl.public.write.payable
     def post_bounty(
         self, bounty_id: str, brief: str, criteria: str, reward: str
     ) -> None:
         if bounty_id in self.bounties:
             raise gl.vm.UserError(f"bounty_id '{bounty_id}' already exists")
+
+        escrow = int(gl.message.value)
 
         items = [c.strip() for c in criteria.split("\n") if c.strip()]
         if len(items) <= 1:
@@ -37,6 +39,7 @@ class BountyCourt(gl.Contract):
             "brief": brief,
             "criteria": items,
             "reward": reward,
+            "escrow": str(escrow),
             "hunter": "",
             "evidence_url": "",
             "status": "OPEN",
