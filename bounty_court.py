@@ -6,6 +6,7 @@ from genlayer import *
 
 
 EVIDENCE_CHARS = 6000
+HEXDIGITS = "0123456789abcdefABCDEF"
 
 
 class BountyCourt(gl.Contract):
@@ -46,6 +47,7 @@ class BountyCourt(gl.Contract):
             "rulings": [],
             "unmet": [],
             "verdict": "",
+            "settlement": "",
         }
         self.bounties[bounty_id] = json.dumps(bounty)
 
@@ -58,6 +60,17 @@ class BountyCourt(gl.Contract):
             )
         if not evidence_url.startswith("https://"):
             raise gl.vm.UserError("evidence_url must be https")
+
+        # The evidence must name an immutable revision. A branch URL such as
+        # ?ref=main or /blob/main/ can change between the moment a hunter
+        # submits and the moment the jury reads it, which would let the party
+        # being judged rewrite the evidence after the fact.
+        if not self._pins_a_revision(evidence_url):
+            raise gl.vm.UserError(
+                "evidence_url must pin an immutable revision: include a "
+                "40-character commit SHA, e.g. "
+                "https://api.github.com/repos/owner/repo/contents?ref=<sha>"
+            )
 
         bounty["hunter"] = gl.message.sender_address.as_hex
         bounty["evidence_url"] = evidence_url
@@ -88,10 +101,9 @@ class BountyCourt(gl.Contract):
         evidence = gl.eq_principle.prompt_comparative(
             fetch_evidence,
             principle=(
-                "Both extracts come from the same page. They are equivalent if "
-                "they describe the same project and the same set of concrete "
-                "artifacts. Ignore differences in whitespace, ads, view counts, "
-                "timestamps, and dynamically rendered navigation."
+                "Both extracts come from the same immutable artifact. They are "
+                "equivalent if they contain the same concrete items - names, "
+                "files, headings, figures. Ignore differences in whitespace."
             ),
         )
 
@@ -158,9 +170,9 @@ class BountyCourt(gl.Contract):
         bounty["unmet"] = unmet_texts
         bounty["status"] = "APPROVED" if approved else "REJECTED"
         bounty["verdict"] = (
-            "APPROVED: all criteria met"
+            f"APPROVED: all criteria met, {settlement}"
             if approved
-            else f"REJECTED: {len(unmet_texts)} of {len(items)} criteria not met"
+            else f"REJECTED: {len(unmet_texts)} of {len(items)} criteria not met, {settlement}"
         )
         self.bounties[bounty_id] = json.dumps(bounty)
         return bounty["verdict"]
@@ -178,6 +190,19 @@ class BountyCourt(gl.Contract):
     @gl.public.view
     def list_bounties(self) -> dict[str, str]:
         return {k: v for k, v in self.bounties.items()}
+
+    def _pins_a_revision(self, url: str) -> bool:
+        """True if some part of the URL is a 40-character hex commit SHA."""
+        parts = url.replace("?", "/").replace("=", "/").replace("&", "/").split("/")
+        for part in parts:
+            if len(part) == 40:
+                all_hex = True
+                for ch in part:
+                    if ch not in HEXDIGITS:
+                        all_hex = False
+                if all_hex:
+                    return True
+        return False
 
     def _load(self, bounty_id: str) -> dict[str, str]:
         if bounty_id not in self.bounties:
