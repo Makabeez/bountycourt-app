@@ -297,7 +297,7 @@ class BountyCourt(gl.Contract):
 
     # -------------------------------------------------------------- internal
 
-    def _convene(self, brief: str, items: list, evidence: str) -> str:
+    def _convene(self, brief, items, evidence):
         """Ask every validator to rule, independently, in booleans only.
 
         An earlier version also requested a per-criterion 'reason' string and
@@ -343,7 +343,7 @@ class BountyCourt(gl.Contract):
             ),
         )
 
-    def _validate(self, ruling_json: str, count: int) -> list:
+    def _validate(self, ruling_json, count):
         """Every field is checked before any value moves. Returns the booleans
         in criterion order; any deviation reverts the transaction."""
         parsed = json.loads(ruling_json)
