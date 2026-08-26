@@ -236,10 +236,10 @@ class BountyCourt(gl.Contract):
             "not met. The hunter may appeal, or anyone may release the escrow."
         )
         self.bounties[bounty_id] = json.dumps(bounty)
-        return bounty["verdict"]
+        pass
 
     @gl.public.write.payable
-    def appeal(self, bounty_id: str) -> str:
+    def appeal(self, bounty_id: str) -> None:
         """Contest the ruling. Only the losing party may appeal, and only by
         posting a bond equal to the escrow. A second jury rules independently
         on the same evidence. Overturned, the appellant takes escrow and bond.
@@ -389,7 +389,7 @@ class BountyCourt(gl.Contract):
         bounty["settlement"] = settlement
         bounty["verdict"] = f"APPEAL {settlement}"
         self.bounties[bounty_id] = json.dumps(bounty)
-        return bounty["verdict"]
+        pass
 
     @gl.public.write
     def release(self, bounty_id: str) -> str:
@@ -415,7 +415,7 @@ class BountyCourt(gl.Contract):
         bounty["settlement"] = settlement
         bounty["verdict"] = f"SETTLED: {settlement}"
         self.bounties[bounty_id] = json.dumps(bounty)
-        return bounty["verdict"]
+        pass
 
     # ----------------------------------------------------------------- views
 
