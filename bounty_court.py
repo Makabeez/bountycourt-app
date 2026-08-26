@@ -103,6 +103,22 @@ class BountyCourt(gl.Contract):
             ),
         )
 
+        # A fetch that exactly filled the window was almost certainly cut off.
+        # Measured on Bradbury: objective claims against a truncated source
+        # produced UNANIMOUS agreement on answers that were false, because the
+        # content the claims referred to never entered the window. Consensus
+        # guarantees agreement, not truth. Refuse to rule rather than settle
+        # money on a view known to be partial.
+        if len(evidence) >= EVIDENCE_CHARS:
+            bounty["status"] = "INCONCLUSIVE"
+            bounty["verdict"] = (
+                "INCONCLUSIVE: the artifact exceeded the readable window, so "
+                "the jury was not asked to rule. Escrow held. Resubmit a "
+                "smaller or more specific artifact."
+            )
+            self.bounties[bounty_id] = json.dumps(bounty)
+            return bounty["verdict"]
+
         # The jury returns ONLY booleans. An earlier version also asked for a
         # per-criterion 'reason' string and told the equivalence principle to
         # ignore it; validators compared the whole JSON anyway and the
