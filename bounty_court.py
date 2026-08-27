@@ -251,6 +251,14 @@ class BountyCourt(gl.Contract):
         self.bounties[bounty_id] = json.dumps(bounty)
         return bounty["verdict"]
 
+    @gl.public.write.payable
+    def top_up(self, bounty_id: str) -> None:
+        """Add value to an existing escrow. Exists to test whether a second
+        payable method deploys at all."""
+        bounty = self._load(bounty_id)
+        bounty["escrow"] = str(int(bounty["escrow"]) + int(gl.message.value))
+        self.bounties[bounty_id] = json.dumps(bounty)
+
     @gl.public.view
     def get_court_name(self) -> str:
         return self.court_name
