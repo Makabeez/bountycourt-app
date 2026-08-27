@@ -46,6 +46,8 @@ class BountyCourt(gl.Contract):
             "status": "OPEN",
             "approved": False,
             "appellant": "",
+            "bond": "0",
+            "first_ruling": None,
             "rulings": [],
             "unmet": [],
             "verdict": "",
@@ -211,13 +213,43 @@ class BountyCourt(gl.Contract):
         bounty["rulings"] = rulings
         bounty["unmet"] = unmet_texts
         bounty["approved"] = approved
+
+        # An appeal round settles immediately: the bond is already staked and
+        # the second jury has now spoken, so there is nothing left to contest.
+        if bounty["appellant"] != "":
+            escrow = int(bounty["escrow"])
+            bond = int(bounty["bond"])
+            total = escrow + bond
+            overturned = approved != bounty["first_ruling"]
+
+            if overturned:
+                winner = Address(bounty["appellant"])
+                settlement = f"overturned: {total} to the appellant"
+            else:
+                if approved:
+                    winner = Address(bounty["hunter"])
+                else:
+                    winner = Address(bounty["poster"])
+                settlement = f"upheld: {total} to the original winner"
+
+            if total > 0:
+                gl.get_contract_at(winner).emit_transfer(value=u256(total), on="finalized")
+
+            bounty["escrow"] = "0"
+            bounty["bond"] = "0"
+            bounty["status"] = "SETTLED_ON_APPEAL"
+            bounty["settlement"] = settlement
+            bounty["verdict"] = f"APPEAL {settlement}"
+            self.bounties[bounty_id] = json.dumps(bounty)
+            return bounty["verdict"]
+
         bounty["status"] = "RULED"
         bounty["verdict"] = (
             f"RULED APPROVED: all {len(items)} criteria met. Escrow held "
-            "pending release."
+            "pending release or appeal."
             if approved
             else f"RULED REJECTED: {len(unmet_texts)} of {len(items)} criteria "
-            "not met. Escrow held pending release."
+            "not met. Escrow held pending release or appeal."
         )
         self.bounties[bounty_id] = json.dumps(bounty)
         return bounty["verdict"]
@@ -254,9 +286,18 @@ class BountyCourt(gl.Contract):
 
     @gl.public.write.payable
     def appeal(self, bounty_id: str) -> str:
-        """PROBE: bond checks, standing check, settlement arithmetic and the
-        transfer - but no second jury. Isolates whether a second nondet block
-        is what breaks deployment."""
+        """Contest a ruling by staking a bond equal to the escrow.
+
+        Only the losing party may appeal. Rather than convening a second jury
+        here, this reopens the case and the caller invokes adjudicate() again:
+        GenVM will not deploy a contract with non-deterministic blocks in two
+        different methods, and re-entering the single adjudication path gives a
+        genuinely independent jury anyway, since consensus runs fresh.
+
+        Overturned, the appellant takes escrow plus bond. Upheld, both go to
+        the party that already won. Appealing costs money and losing an appeal
+        costs more.
+        """
         bounty = self._load(bounty_id)
         if bounty["status"] != "RULED":
             raise gl.vm.UserError(f"cannot appeal a bounty that is {bounty['status']}")
@@ -274,15 +315,14 @@ class BountyCourt(gl.Contract):
         if caller != loser:
             raise gl.vm.UserError("only the losing party may appeal")
 
-        total = escrow + bond
-        winner = Address(caller)
-        gl.get_contract_at(winner).emit_transfer(value=u256(total), on="finalized")
-
         bounty["appellant"] = caller
-        bounty["escrow"] = "0"
-        bounty["status"] = "SETTLED_ON_APPEAL"
-        bounty["settlement"] = f"probe: {total} to appellant"
-        bounty["verdict"] = "PROBE APPEAL"
+        bounty["bond"] = str(bond)
+        bounty["first_ruling"] = bounty["approved"]
+        bounty["status"] = "SUBMITTED"
+        bounty["verdict"] = (
+            "UNDER APPEAL: bond staked, the case is reopened. Call adjudicate "
+            "again to convene a fresh jury on the same evidence."
+        )
         self.bounties[bounty_id] = json.dumps(bounty)
         return bounty["verdict"]
 
