@@ -45,6 +45,7 @@ class BountyCourt(gl.Contract):
             "evidence_url": "",
             "status": "OPEN",
             "approved": False,
+            "appellant": "",
             "rulings": [],
             "unmet": [],
             "verdict": "",
@@ -252,12 +253,38 @@ class BountyCourt(gl.Contract):
         return bounty["verdict"]
 
     @gl.public.write.payable
-    def top_up(self, bounty_id: str) -> None:
-        """Add value to an existing escrow. Exists to test whether a second
-        payable method deploys at all."""
+    def appeal(self, bounty_id: str) -> str:
+        """PROBE: bond checks, standing check, settlement arithmetic and the
+        transfer - but no second jury. Isolates whether a second nondet block
+        is what breaks deployment."""
         bounty = self._load(bounty_id)
-        bounty["escrow"] = str(int(bounty["escrow"]) + int(gl.message.value))
+        if bounty["status"] != "RULED":
+            raise gl.vm.UserError(f"cannot appeal a bounty that is {bounty['status']}")
+
+        escrow = int(bounty["escrow"])
+        bond = int(gl.message.value)
+        if bond != escrow:
+            raise gl.vm.UserError("the appeal bond must equal the escrow")
+
+        caller = gl.message.sender_address.as_hex
+        if bounty["approved"]:
+            loser = bounty["poster"]
+        else:
+            loser = bounty["hunter"]
+        if caller != loser:
+            raise gl.vm.UserError("only the losing party may appeal")
+
+        total = escrow + bond
+        winner = Address(caller)
+        gl.get_contract_at(winner).emit_transfer(value=u256(total), on="finalized")
+
+        bounty["appellant"] = caller
+        bounty["escrow"] = "0"
+        bounty["status"] = "SETTLED_ON_APPEAL"
+        bounty["settlement"] = f"probe: {total} to appellant"
+        bounty["verdict"] = "PROBE APPEAL"
         self.bounties[bounty_id] = json.dumps(bounty)
+        return bounty["verdict"]
 
     @gl.public.view
     def get_court_name(self) -> str:
