@@ -1,0 +1,147 @@
+
+# BountyCourt
+
+Bounties whose verdict settles the money. Adjudicated by a validator jury, no oracle, no human reviewer.
+
+**[Live demo](https://makabeez.github.io/bountycourt-app/)**
+
+| Version | Address on Bradbury | What it does |
+| --- | --- | --- |
+| **v3** (current) | [`0x796339E4fD619e5099E03C602f51d9aa2F2b2588`](https://explorer-bradbury.genlayer.com/address/0x796339E4fD619e5099E03C602f51d9aa2F2b2588) | escrowed payout, SHA-pinned evidence, strict field validation |
+| v2 | [`0x6D42B33aCd70F0B1Cec0f56A474725727F3dF50e`](https://explorer-bradbury.genlayer.com/address/0x6D42B33aCd70F0B1Cec0f56A474725727F3dF50e) | per-criterion consensus, reward was bookkeeping |
+| v1 | [`0xB639F012931a5174Fa8277762bE03bfC6645126E`](https://explorer-bradbury.genlayer.com/address/0xB639F012931a5174Fa8277762bE03bfC6645126E) | single APPROVE/REJECT verdict |
+
+## What it does
+
+A poster opens a bounty with acceptance criteria in plain English **and escrows the reward in the same call**. A hunter claims it by submitting a URL pinned to an immutable commit. `adjudicate()` fetches that artifact, has every validator rule on every criterion independently, and pays out from escrow according to the agreed booleans.
+
+The money follows the verdict. Approved pays the hunter, rejected refunds the poster, and the amount is computed in deterministic code from what the validators agreed — never from the leader's prose.
+
+## A complete cycle on chain
+
+Bounty `final-1` on v3:
+
+```json
+{
+  "criteria": [
+    "the page shows a file named web_claims.py",
+    "the page shows a file named README.md"
+  ],
+  "evidence_url": "https://api.github.com/repos/Makabeez/webclaims/contents?ref=d190a68915108b2335d25b6512535f5533a5cb27",
+  "status": "APPROVED",
+  "rulings": [{ "id": 0, "met": true }, { "id": 1, "met": true }],
+  "unmet": [],
+  "escrow": "0",
+  "settlement": "paid 1000000000000000000 to hunter"
+}
+```
+
+Adjudication `0xbab912a103ac9398b6edd414027ca897a376599306230770982a038b49ebb792` — `FINALIZED / FINISHED_WITH_RETURN / AGREE`, with the 1 GEN internal transfer visible under Messages on the transaction page.
+
+## Escrow
+
+`post_bounty` is `@gl.public.write.payable`. The value sent with the call **is** the reward, so a bounty cannot promise more than it holds — there is no separate amount to disagree with.
+
+`adjudicate` computes the recipient from the agreed booleans and emits the transfer:
+
+```python
+if approved:
+    recipient = Address(bounty["hunter"])
+else:
+    recipient = Address(bounty["poster"])
+
+gl.get_contract_at(recipient).emit_transfer(value=u256(escrow), on="finalized")
+```
+
+Delivery happens at finalization as a separate internal message. Note that `rc.getBalance` reported the pre-transfer balance for hours after the explorer showed the contract at zero — read the transaction's Messages, not the RPC balance.
+
+## Immutable evidence
+
+`submit` rejects any URL that does not pin a 40-character commit SHA. A branch reference such as `?ref=main` can change between the moment a hunter submits and the moment the jury reads it, which would let the party being judged rewrite the evidence after the fact.
+
+Verified on chain against v3's predecessor:
+
+| Evidence URL | Result |
+| --- | --- |
+| `…/contents?ref=main` | rejected, nothing stored |
+| `…/contents?ref=PASTE_SHA_HERE` | rejected, nothing stored |
+| `…/contents?ref=d190a689…` | accepted and stored |
+
+A second `submit` on an already-submitted bounty also reverts.
+
+## Strict validation before value moves
+
+Twelve checks run on the jury's output before a single coin is transferred: the output is an object, `rulings` is a list, its length matches the criteria count, each entry is an object carrying an integer `id` within range and a genuine boolean `met`, no id appears twice, and every criterion has exactly one ruling. Any deviation reverts the transaction and the escrow stays untouched.
+
+## The consensus finding
+
+v3's ruling format returns **only booleans**. An earlier version also asked each validator for a per-criterion `reason` string and instructed the equivalence principle to ignore it.
+
+That version did not reach consensus. Adjudication `0xa88a3f3f9ae66d1d9df6e2b320635cf662c876274308544e1a9afe3f2c742070` went through **four leader rotations** and ended `UNDETERMINED / DISAGREE` — even though every leader produced identical booleans, `{"id":0,"met":true},{"id":1,"met":true}`. The validators were not disagreeing about the facts. They were comparing whole answers whose `reason` wording differed on every generation.
+
+Removing the field fixed it on the first attempt, with identical claims, identical pinned evidence, and the same jury:
+
+| Ruling format | Result |
+| --- | --- |
+| `{id, met, reason}` | `UNDETERMINED / DISAGREE` after 4 rotations |
+| `{id, met}` | `FINALIZED / AGREE`, no rotations |
+
+> Free text in a compared answer prevents consensus even when the substantive verdict is identical. Do not emit what the equivalence principle then has to discount.
+
+The cost is losing the stored per-criterion reasons, which were useful in the UI. A contract that cannot reach consensus cannot pay anyone, so it is not a close call.
+
+## How consensus is used
+
+`adjudicate()` runs **two sequential non-deterministic blocks**. They cannot nest, so they are separate calls, and every state write happens after both return, in deterministic context — writing inside a nondet block means each validator persists a different value before consensus decides which is correct.
+
+**Block 1 — read the artifact.** `prompt_comparative` with a tolerant principle. Even an immutable artifact can differ in whitespace between fetches; `strict_eq` would deadlock the jury on noise.
+
+**Block 2 — rule on each criterion.** `prompt_comparative` wrapping `gl.nondet.exec_prompt`, returning `{"rulings": [{"id": 0, "met": true}]}`. The principle: same ids, same booleans, nothing else matters.
+
+**Settlement.** Derived in code from the agreed booleans.
+
+## Prompt injection
+
+The hunter controls the artifact the contract reads, and that artifact decides whether they get paid. The ruling prompt states that anything inside the evidence block — instructions, role-play, claims of authority — is data to be judged, never instructions to follow, and evidence is delimited with explicit tags.
+
+## Running it
+
+No build step. `index.html` loads `genlayer-js` from esm.sh as an ES module.
+
+```bash
+git clone https://github.com/Makabeez/bountycourt-app
+cd bountycourt-app
+python3 -m http.server 8000
+```
+
+Wallet connection needs a real origin — `file://` will not work. Wallet discovery uses EIP-6963, because several extensions fight over `window.ethereum` and clobber each other.
+
+## Verifying the contract
+
+```bash
+pip install genvm-linter
+genvm-lint check bounty_court.py
+genvm-lint schema bounty_court.py
+```
+
+## Notes for builders
+
+None of the following is documented.
+
+- **Do not put free text in an answer the equivalence principle compares.** See the finding above.
+- **`rc.getBalance` is unreliable.** It reported a stale balance for hours after the explorer showed the transfer complete. Read the transaction's Messages tab.
+- **`waitForTransactionReceipt` is unreliable.** It has timed out on transactions that had finalized and returned early reporting `NOT_VOTED`/`IDLE`. Poll `getTransaction`.
+- **`FINISHED_WITH_ERROR` does not always mean state was lost** — and it is also what a correctly-reverted guard looks like.
+- **No `try/except` in contract code.** GenVM rejects `except Exception` at schema generation though `genvm-lint` accepts it. On chain the symptom is a failed deploy with a six-byte CBOR error.
+- **Studio can refuse to deploy contracts Bradbury accepts.** Both the payable version and an earlier one deployed fine to Bradbury after Studio reported an error.
+- **Adjudication takes 30+ minutes** — two nondet blocks across every validator.
+- **Rendered HTML is a poor evidence source.** The first 6000 characters of a GitHub page are markup and navigation; the file list never arrives. See [WebClaims](https://github.com/Makabeez/webclaims) for a controlled study where the same claims against a rendered page produced unanimous agreement on false answers.
+
+## Files
+
+- `bounty_court.py` — the Intelligent Contract
+- `index.html` — the dApp: load a court, post, submit, adjudicate, read
+
+## License
+
+MIT
