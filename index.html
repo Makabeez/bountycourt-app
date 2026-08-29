@@ -3,33 +3,78 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BountyCourt — onchain bounty adjudication</title>
+<title>BountyCourt — bounties settled by a validator jury</title>
+<meta name="description" content="Escrowed bounties adjudicated by a GenLayer validator jury. Plain-English criteria, immutable evidence, per-criterion consensus, contestable verdicts.">
 <style>
-:root{--bg:#F7F6F3;--fg:#1A1A18;--muted:#6B6A64;--card:#FFF;--line:#E4E2DB;--ok:#1D9E75;--no:#D85A30;--wait:#BA7517}
-@media(prefers-color-scheme:dark){:root{--bg:#131312;--fg:#F1EFE8;--muted:#8E8D86;--card:#1E1E1C;--line:#2E2E2B}}
+:root{--bg:#F7F6F3;--fg:#1A1A18;--muted:#6B6A64;--card:#FFF;--line:#E4E2DB;--ok:#1D9E75;--no:#D85A30;--wait:#BA7517;--accent:#1A1A18}
+@media(prefers-color-scheme:dark){:root{--bg:#131312;--fg:#F1EFE8;--muted:#8E8D86;--card:#1E1E1C;--line:#2E2E2B;--accent:#F1EFE8}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;padding:40px 20px}
-.wrap{max-width:860px;margin:0 auto}
-header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
-h1{font-size:22px;font-weight:500;margin:0}
-.sub{color:var(--muted);margin:0 0 24px;font-size:14px}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif}
+.wrap{max-width:880px;margin:0 auto;padding:0 20px}
+
+/* ---------- hero ---------- */
+.hero{padding:72px 0 48px;border-bottom:1px solid var(--line)}
+.hero h1{font-size:40px;line-height:1.1;font-weight:600;margin:0 0 16px;letter-spacing:-0.02em}
+.hero .lede{font-size:19px;line-height:1.55;color:var(--muted);margin:0 0 28px;max-width:620px}
+.hero .lede strong{color:var(--fg);font-weight:500}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+.chip{font-size:12px;padding:4px 11px;border-radius:20px;border:1px solid var(--line);color:var(--muted)}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.cta a{display:inline-block;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:500;text-decoration:none}
+.cta a.primary{background:var(--accent);color:var(--bg)}
+.cta a.ghost{border:1px solid var(--line);color:var(--fg)}
+
+/* ---------- sections ---------- */
+section{padding:52px 0;border-bottom:1px solid var(--line)}
+section h2{font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin:0 0 20px}
+section h3{font-size:22px;font-weight:500;margin:0 0 12px;letter-spacing:-0.01em}
+section p{margin:0 0 14px;max-width:660px}
+section p.sub{color:var(--muted)}
+
+/* ---------- lifecycle ---------- */
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:24px 0 8px}
+@media(max-width:760px){.flow{grid-template-columns:1fr 1fr}}
+.step{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.step .n{font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);display:block;margin-bottom:8px}
+.step .t{font-size:14px;font-weight:500;display:block;margin-bottom:6px}
+.step .d{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+/* ---------- feature grid ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.feat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+.feat h4{font-size:15px;font-weight:500;margin:0 0 8px}
+.feat p{font-size:13.5px;color:var(--muted);margin:0;line-height:1.6}
+
+/* ---------- evidence table ---------- */
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+th{text-align:left;font-weight:500;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:0.05em;padding:0 12px 10px 0}
+td{padding:10px 12px 10px 0;border-top:1px solid var(--line);vertical-align:top}
+td a{color:var(--fg)}
+code,.mono{font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
+
+.quote{border-left:2px solid var(--line);padding:2px 0 2px 16px;margin:20px 0;color:var(--muted);font-size:15px}
+.quote strong{color:var(--fg);font-weight:500}
+
+/* ---------- app ---------- */
+#app{padding:52px 0 80px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px}
-h2{font-size:15px;font-weight:500;margin:0 0 14px}
+.card h3{font-size:15px;font-weight:500;margin:0 0 14px}
 label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
 input,textarea,select{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit;font-size:14px}
 textarea{min-height:70px;resize:vertical}
-button{background:var(--fg);color:var(--bg);border:0;border-radius:8px;padding:9px 16px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;margin-top:14px}
+button{background:var(--accent);color:var(--bg);border:0;border-radius:8px;padding:9px 16px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;margin-top:14px}
 button.ghost{background:none;color:var(--fg);border:1px solid var(--line)}
 button:disabled{opacity:.45;cursor:not-allowed}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:680px){.grid{grid-template-columns:1fr}}
+.bar{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+#wsel{width:auto;min-width:140px;padding:6px 10px;font-size:13px}
 .pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:20px;border:1px solid var(--line);color:var(--muted)}
-.pill.APPROVED{color:var(--ok);border-color:var(--ok)}
-.pill.REJECTED{color:var(--no);border-color:var(--no)}
-.pill.SUBMITTED,.pill.OPEN{color:var(--wait);border-color:var(--wait)}
+.pill.APPROVED,.pill.SETTLED{color:var(--ok);border-color:var(--ok)}
+.pill.REJECTED,.pill.SETTLED_ON_APPEAL{color:var(--no);border-color:var(--no)}
+.pill.SUBMITTED,.pill.OPEN,.pill.RULED,.pill.INCONCLUSIVE{color:var(--wait);border-color:var(--wait)}
 .b{border-top:1px solid var(--line);padding:14px 0}
 .b:first-of-type{border-top:0}
-.b h3{font-size:14px;font-weight:500;margin:0 0 6px;display:flex;gap:10px;align-items:center}
+.b h4{font-size:14px;font-weight:500;margin:0 0 6px;display:flex;gap:10px;align-items:center}
 .b p{margin:4px 0;font-size:13px;color:var(--muted);word-break:break-word}
 .rul{margin-top:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .rul div{display:flex;gap:10px;padding:7px 11px;font-size:13px;border-top:1px solid var(--line)}
@@ -38,67 +83,163 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .rul .n{color:var(--no)}
 .v{font-size:13px;margin-top:8px;padding:9px 11px;border-radius:8px;background:var(--bg);border:1px solid var(--line)}
 .log{font:12px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);white-space:pre-wrap;max-height:220px;overflow:auto}
-.bar{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
-.sp{width:16px;height:16px;flex:none}
-.mono{font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
-#wsel{width:auto;min-width:140px;padding:6px 10px;font-size:13px}
 .note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+.sp{width:16px;height:16px;flex:none}
+footer{padding:28px 0 60px;color:var(--muted);font-size:13px}
+footer a{color:var(--muted)}
 </style>
 </head>
 <body>
+
+<!-- ===================== LANDING ===================== -->
 <div class="wrap">
-<header>
-  <h1>BountyCourt</h1>
-  <div class="bar">
-    <span id="net">not connected</span>
-    <select id="wsel"><option>detecting…</option></select>
-    <button class="ghost" id="conn" style="margin:0">Connect</button>
-  </div>
-</header>
-<p class="sub">Bounties adjudicated by a validator jury on GenLayer Bradbury. Each acceptance criterion is judged separately and every validator must agree on every one before anything is written.</p>
 
-<div class="card">
-  <h2>Load a court</h2>
-  <label>Contract address</label>
-  <input id="addr" value="0x796339E4fD619e5099E03C602f51d9aa2F2b2588" spellcheck="false">
-  <button id="load">Load court</button>
-  <div class="bar" style="margin-top:12px"><span id="court">—</span></div>
-  <p class="note">v2 (per-criterion consensus) is prefilled. v1, with a single verdict, is at 0xB639F012931a5174Fa8277762bE03bfC6645126E.</p>
+<div class="hero">
+  <h1>Bounties settled by a validator jury.</h1>
+  <p class="lede">Post work with acceptance criteria in plain English and <strong>escrow the reward in the same call</strong>. A hunter submits evidence pinned to an immutable commit. Every validator rules on every criterion independently, and the escrow follows what they agreed — <strong>no oracle, no human reviewer, no trusted admin</strong>.</p>
+  <div class="chips">
+    <span class="chip">Dispute Resolution</span>
+    <span class="chip">Escrowed payout</span>
+    <span class="chip">Per-criterion consensus</span>
+    <span class="chip">Contestable verdicts</span>
+  </div>
+  <div class="cta">
+    <a class="primary" href="#app">Open the court</a>
+    <a class="ghost" href="https://github.com/Makabeez/bountycourt-app">Source</a>
+    <a class="ghost" href="https://explorer-bradbury.genlayer.com/address/0x1e68256A8Fc62c513691886a6230f00F3b4DdE7D">Contract on Bradbury</a>
+  </div>
 </div>
 
-<div class="grid">
+<section>
+  <h2>The problem</h2>
+  <h3>Somebody has to decide whether the work was done.</h3>
+  <p class="sub">Every bounty, grant milestone and freelance escrow eventually reaches the same question, and the usual answers are all custodial. A maintainer decides. A multisig decides. An oracle relays a decision made somewhere off-chain. In each case the party holding the money is also the party judging the work.</p>
+  <p class="sub">BountyCourt puts the judgment itself under consensus. The criteria are public before the work starts, the evidence is immutable once submitted, and the validators who rule cannot see each other's answers — they only agree if they independently reached the same one.</p>
+</section>
+
+<section>
+  <h2>Lifecycle</h2>
+  <div class="flow">
+    <div class="step"><span class="n">01</span><span class="t">Post</span><span class="d">Criteria in plain English. The GEN you send is the escrow.</span></div>
+    <div class="step"><span class="n">02</span><span class="t">Submit</span><span class="d">Evidence URL pinned to a 40-character commit SHA.</span></div>
+    <div class="step"><span class="n">03</span><span class="t">Adjudicate</span><span class="d">Every validator rules on every criterion, independently.</span></div>
+    <div class="step"><span class="n">04</span><span class="t">Release</span><span class="d">Escrow goes to whoever the agreed booleans say won.</span></div>
+    <div class="step"><span class="n">05</span><span class="t">or Appeal</span><span class="d">The loser stakes a bond equal to the escrow for a second jury.</span></div>
+  </div>
+  <p class="note">A ruling holds the escrow rather than paying it. That gap is what makes an appeal possible.</p>
+</section>
+
+<section>
+  <h2>How it is built</h2>
+  <div class="grid2">
+    <div class="feat">
+      <h4>Consensus per criterion, not per verdict</h4>
+      <p>The jury returns one boolean per criterion. Validators must agree on every one before anything is written. The outcome is then computed in deterministic code — the leader's prose decides nothing.</p>
+    </div>
+    <div class="feat">
+      <h4>Evidence that cannot change</h4>
+      <p>A URL without a 40-character commit SHA is refused. A branch reference could be rewritten between submission and adjudication, letting the party being judged edit their own evidence.</p>
+    </div>
+    <div class="feat">
+      <h4>It refuses to rule on a partial view</h4>
+      <p>If the artifact exceeds the readable window the contract returns INCONCLUSIVE and holds the escrow. We measured validators agreeing unanimously on false answers when evidence was truncated.</p>
+    </div>
+    <div class="feat">
+      <h4>Appeals cost money</h4>
+      <p>Only the losing party may appeal, and only by staking a bond equal to the escrow. Overturned, they take escrow plus bond. Upheld, both go to the other side.</p>
+    </div>
+    <div class="feat">
+      <h4>Twelve checks before value moves</h4>
+      <p>Output shape, ruling count, id range, duplicate ids, boolean types, full coverage. Any deviation reverts the transaction and the escrow stays exactly where it was.</p>
+    </div>
+    <div class="feat">
+      <h4>Untrusted evidence, treated as such</h4>
+      <p>The hunter controls the page the contract reads. The ruling prompt states that anything inside the evidence block is data to be judged, never instructions to follow.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What we learned building it</h2>
+  <div class="quote">
+    <strong>Consensus guarantees agreement, not truth.</strong> In a controlled study, the same claims against a rendered HTML page produced unanimous agreement on answers that were false — the file list never entered the character window. Against a structured JSON source, the same jury answered correctly. The fetch layer decides which one you get, and only the first is reported on chain.
+  </div>
+  <div class="quote">
+    <strong>Free text in a compared answer prevents consensus.</strong> An earlier version asked validators for a per-criterion reason string and told the equivalence principle to ignore it. Four leader rotations, UNDETERMINED, with identical booleans from every leader. Removing the field fixed it on the first attempt.
+  </div>
+  <p class="sub">Both findings, and five more undocumented GenVM behaviours, are written up in the <a href="https://github.com/Makabeez/bountycourt-app">repository</a> and the <a href="https://github.com/Makabeez/webclaims">WebClaims study</a>.</p>
+</section>
+
+<section>
+  <h2>Verified on Bradbury</h2>
+  <table>
+    <tr><th>What</th><th>Result</th><th>Transaction</th></tr>
+    <tr>
+      <td>Ruling holds the escrow</td>
+      <td>RULED, 1 GEN retained, then SETTLED on release</td>
+      <td><a class="mono" href="https://explorer-bradbury.genlayer.com/tx/0x410d32778c331c990065a2a80867af8415c3dd48eafdd798987d2fc7e81c2d91">0x410d3277…</a></td>
+    </tr>
+    <tr>
+      <td>Truncated artifact refused</td>
+      <td>INCONCLUSIVE, 20,365 bytes vs a 6,000-char window, jury never convened</td>
+      <td><a class="mono" href="https://explorer-bradbury.genlayer.com/tx/0x17ed43bb20b4ad272c440d2b672ba90fae3db07dddbeeab7f2795f57edd85e5f">0x17ed43bb…</a></td>
+    </tr>
+    <tr>
+      <td>Appeal staked and heard</td>
+      <td>REJECTED → bond → second jury → upheld, 2 GEN to the original winner</td>
+      <td><a class="mono" href="https://explorer-bradbury.genlayer.com/tx/0x455165eccb72fad9efdf9f7734a2063b276370964b1f3847d6db2b0fe697c7ff">0x455165ec…</a></td>
+    </tr>
+    <tr>
+      <td>Mutable evidence rejected</td>
+      <td><code>?ref=main</code> reverted, nothing stored</td>
+      <td class="mono">on 0xBe1998aa…</td>
+    </tr>
+  </table>
+</section>
+
+</div>
+
+<!-- ===================== APP ===================== -->
+<div class="wrap" id="app">
+  <h2 style="font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px">Live court</h2>
+  <h3 style="font-size:22px;font-weight:500;margin:0 0 6px">Read the contract</h3>
+  <p class="note" style="margin:0 0 20px;max-width:640px">The court below is live on GenLayer Bradbury. Bounties and their per-criterion rulings load automatically. Posting and appealing require sending value, so those steps are driven from the browser console — see the repository for the exact calls.</p>
+
   <div class="card">
-    <h2>Post a bounty</h2>
-    <label>ID</label><input id="pid" placeholder="rust-cli-1">
-    <label>Brief</label><textarea id="pbrief" placeholder="Ship a Rust CLI that mints an NFT"></textarea>
-    <label>Acceptance criteria — one per line</label>
-    <textarea id="pcrit" placeholder="the repository contains a file named Cargo.toml&#10;the repository contains a directory named src"></textarea>
-    <label>Reward</label><input id="prew" placeholder="500">
-    <button id="post" disabled>Post bounty</button>
-    <p class="note">Write each criterion as an objective statement about what exists. Point evidence at structured data — api.github.com, not a rendered page.</p>
+    <div class="bar" style="justify-content:space-between">
+      <span id="net">not connected</span>
+      <span class="bar">
+        <select id="wsel"><option>detecting…</option></select>
+        <button class="ghost" id="conn" style="margin:0">Connect</button>
+      </span>
+    </div>
   </div>
+
   <div class="card">
-    <h2>Submit evidence</h2>
-    <label>Bounty ID</label><input id="sid" placeholder="rust-cli-1">
-    <label>Evidence URL</label><input id="surl" placeholder="https://api.github.com/repos/…" spellcheck="false">
-    <button id="sub" disabled>Submit</button>
-    <h2 style="margin-top:26px">Adjudicate</h2>
-    <label>Bounty ID</label><input id="aid" placeholder="rust-cli-1">
-    <button id="adj" disabled>Convene the jury</button>
-    <p class="note">Adjudication runs two non-deterministic blocks across every validator. Expect 30+ minutes.</p>
+    <h3>Court</h3>
+    <label>Contract address</label>
+    <input id="addr" value="0x1e68256A8Fc62c513691886a6230f00F3b4DdE7D" spellcheck="false">
+    <button id="load">Load court</button>
+    <div class="bar" style="margin-top:12px"><span id="court">—</span></div>
+    <p class="note">v5 with appeals is prefilled. Earlier versions are listed in the repository.</p>
+  </div>
+
+  <div class="card">
+    <h3>Bounties <button class="ghost" id="refresh" style="margin:0;padding:4px 10px;font-size:12px;float:right">Refresh</button></h3>
+    <div id="list"><p class="note" style="margin:0">Loading…</p></div>
+  </div>
+
+  <div class="card">
+    <h3>Activity</h3>
+    <div class="log" id="log">ready</div>
   </div>
 </div>
 
-<div class="card">
-  <h2>Bounties <button class="ghost" id="refresh" style="margin:0;padding:4px 10px;font-size:12px;float:right">Refresh</button></h2>
-  <div id="list"><p class="sub" style="margin:0">Load a court to see bounties.</p></div>
-</div>
-
-<div class="card">
-  <h2>Activity</h2>
-  <div class="log" id="log">ready</div>
-</div>
-</div>
+<div class="wrap"><footer>
+  BountyCourt · <a href="https://github.com/Makabeez/bountycourt-app">source</a> ·
+  <a href="https://explorer-bradbury.genlayer.com/address/0x1e68256A8Fc62c513691886a6230f00F3b4DdE7D">contract</a> ·
+  built on <a href="https://genlayer.com">GenLayer</a> · MIT
+</footer></div>
 
 <script type="module">
 import { createClient } from "https://esm.sh/genlayer-js@latest";
@@ -108,14 +249,9 @@ const $ = id => document.getElementById(id);
 const log = m => { $("log").textContent = new Date().toLocaleTimeString() + "  " + m + "\n" + $("log").textContent; };
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-const SPINNER = `<svg class="sp" viewBox="0 0 48 48"><style>.ring{transform-origin:24px 24px;animation:r 2.4s linear infinite}.v{animation:v 1.8s ease-in-out infinite}@keyframes r{to{transform:rotate(360deg)}}@keyframes v{0%,20%{opacity:.18}35%,60%{opacity:1}75%,100%{opacity:.18}}</style><g class="ring" fill="currentColor"><circle class="v" cx="24" cy="9" r="3.4"/><circle class="v" cx="37" cy="16.5" r="3.4" style="animation-delay:.15s"/><circle class="v" cx="37" cy="31.5" r="3.4" style="animation-delay:.3s"/><circle class="v" cx="24" cy="39" r="3.4" style="animation-delay:.45s"/><circle class="v" cx="11" cy="31.5" r="3.4" style="animation-delay:.6s"/><circle class="v" cx="11" cy="16.5" r="3.4" style="animation-delay:.75s"/></g></svg>`;
-
 const readClient = createClient({ chain: testnetBradbury });
 let writeClient = null, account = null, contract = null;
 
-// ---------- EIP-6963 wallet discovery ----------
-// Several extensions fight over window.ethereum and clobber each other.
-// 6963 lets each announce itself so the user picks one explicitly.
 const wallets = new Map();
 function renderWallets() {
   const found = [...wallets.values()];
@@ -129,72 +265,21 @@ window.addEventListener("eip6963:announceProvider", e => {
 window.dispatchEvent(new Event("eip6963:requestProvider"));
 setTimeout(renderWallets, 400);
 
-function chosen() {
-  const v = $("wsel").value;
-  if (v && wallets.has(v)) return { p: wallets.get(v).provider, n: wallets.get(v).info.name };
-  return { p: window.ethereum || null, n: "injected" };
-}
-
-function gate(busy) {
-  ["post", "sub", "adj"].forEach(b => $(b).disabled = busy || !writeClient || !contract);
-}
-function status(busy, msg) {
-  $("net").innerHTML = busy ? SPINNER + " " + msg
-    : (account ? account.slice(0, 6) + "…" + account.slice(-4) : "not connected");
-  gate(busy);
-}
-
 $("conn").onclick = async () => {
-  const { p, n } = chosen();
+  const v = $("wsel").value;
+  const p = (v && wallets.has(v)) ? wallets.get(v).provider : window.ethereum;
   if (!p) return log("no wallet available");
   try {
     const [a] = await p.request({ method: "eth_requestAccounts" });
     account = a;
     writeClient = createClient({ chain: testnetBradbury, account: a, provider: p });
-    // Chain switching is best-effort: if the wallet is already on Bradbury
-    // some providers throw here, and that must not abort the connection.
     try { await writeClient.connect("testnetBradbury"); }
     catch (e) { log("chain switch skipped: " + (e.message || e)); }
     $("conn").textContent = "Connected";
-    log("connected " + a + " via " + n);
-    status(false);
-    if ($("addr").value.trim()) loadCourt();
+    $("net").textContent = a.slice(0, 6) + "…" + a.slice(-4);
+    log("connected " + a);
   } catch (e) { log("connect failed: " + (e.message || e)); }
 };
-
-// ---------- polling ----------
-// waitForTransactionReceipt is unreliable on Bradbury: it has timed out on
-// transactions that had finalized, and returned early reporting NOT_VOTED.
-// Poll getTransaction instead, and verify state separately.
-async function awaitTx(hash, label, maxMin = 60) {
-  const deadline = Date.now() + maxMin * 60000;
-  while (Date.now() < deadline) {
-    await new Promise(r => setTimeout(r, 12000));
-    let tx;
-    try { tx = await readClient.getTransaction({ hash }); } catch { continue; }
-    const s = tx?.statusName, res = tx?.resultName;
-    if (s === "FINALIZED" || s === "ACCEPTED") {
-      log(`${label}: ${s} / ${tx?.txExecutionResultName} / ${res}`);
-      if (res === "DISAGREE") log(`${label}: validators did not agree — no state written`);
-      if (res === "TIMEOUT") log(`${label}: consensus timed out — no state written`);
-      return tx;
-    }
-  }
-  log(`${label}: still pending after ${maxMin} min — check again later`);
-  return null;
-}
-
-async function send(fn, args, label, minutes) {
-  if (!writeClient || !contract) return log("connect a wallet and load a court first");
-  status(true, label);
-  try {
-    const hash = await writeClient.writeContract({ address: contract, functionName: fn, args, value: BigInt(0) });
-    log(`${fn} sent: ${hash}`);
-    await awaitTx(hash, fn, minutes);
-    status(false);
-    refresh();
-  } catch (e) { log(`${fn} failed: ` + (e.message || e)); status(false); }
-}
 
 async function loadCourt() {
   const a = $("addr").value.trim();
@@ -204,17 +289,10 @@ async function loadCourt() {
     const name = await readClient.readContract({ address: contract, functionName: "get_court_name", args: [] });
     $("court").innerHTML = esc(name) + ' <span class="mono">' + esc(a) + "</span>";
     log("loaded court: " + name);
-    gate(false);
     refresh();
   } catch (e) { log("load failed: " + (e.message || e)); }
 }
 $("load").onclick = loadCourt;
-
-$("post").onclick = () => send("post_bounty",
-  [$("pid").value.trim(), $("pbrief").value.trim(), $("pcrit").value.trim(), $("prew").value.trim() || "0"],
-  "posting", 20);
-$("sub").onclick = () => send("submit", [$("sid").value.trim(), $("surl").value.trim()], "submitting", 20);
-$("adj").onclick = () => send("adjudicate", [$("aid").value.trim()], "jury deliberating", 60);
 $("refresh").onclick = () => refresh();
 
 async function refresh() {
@@ -222,21 +300,21 @@ async function refresh() {
   try {
     const all = await readClient.readContract({ address: contract, functionName: "list_bounties", args: [] });
     const entries = Object.entries(all || {});
-    if (!entries.length) { $("list").innerHTML = '<p class="sub" style="margin:0">No bounties yet.</p>'; return; }
+    if (!entries.length) { $("list").innerHTML = '<p class="note" style="margin:0">No bounties yet.</p>'; return; }
     $("list").innerHTML = entries.reverse().map(([id, raw]) => {
       const b = JSON.parse(raw);
       const crit = Array.isArray(b.criteria) ? b.criteria : [b.criteria];
       const rulings = Array.isArray(b.rulings) ? b.rulings : [];
       return `<div class="b">
-        <h3>${esc(id)} <span class="pill ${esc(b.status)}">${esc(b.status)}</span></h3>
+        <h4>${esc(id)} <span class="pill ${esc(b.status)}">${esc(b.status)}</span></h4>
         <p>${esc(b.brief)}</p>
         <p><strong>Criteria:</strong> ${crit.map(c => esc(c)).join(" · ")}</p>
         ${b.evidence_url ? `<p><strong>Evidence:</strong> ${esc(b.evidence_url)}</p>` : ""}
         ${rulings.length ? `<div class="rul">${rulings.map(r =>
           `<div><span class="${r.met ? "y" : "n"}">${r.met ? "✓" : "✗"}</span>
-           <span>${esc(crit[r.id] ?? ("criterion " + r.id))}</span>
-           <span style="color:var(--muted);margin-left:auto">${esc(r.reason)}</span></div>`).join("")}</div>` : ""}
+           <span>${esc(crit[r.id] ?? ("criterion " + r.id))}</span></div>`).join("")}</div>` : ""}
         ${b.verdict ? `<div class="v">${esc(b.verdict)}</div>` : ""}
+        ${b.settlement ? `<p><strong>Settlement:</strong> ${esc(b.settlement)}</p>` : ""}
       </div>`;
     }).join("");
   } catch (e) { log("refresh failed: " + (e.message || e)); }
