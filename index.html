@@ -117,7 +117,7 @@ footer a{color:var(--muted)}
   <div class="cta">
     <a class="primary" href="#app">Open the court</a>
     <a class="ghost" href="https://github.com/Makabeez/bountycourt-app">Source</a>
-    <a class="ghost" href="https://explorer-bradbury.genlayer.com/address/0x1e68256A8Fc62c513691886a6230f00F3b4DdE7D">Contract on Bradbury</a>
+    <a class="ghost" href="https://explorer-studio-dev.genlayer.com/address/0xDc069a180522D80F28dea7DF96FCCd121707F714">Contract on Studio Next</a>
   </div>
 </div>
 
@@ -152,8 +152,8 @@ footer a{color:var(--muted)}
       <p>A URL without a 40-character commit SHA is refused. A branch reference could be rewritten between submission and adjudication, letting the party being judged edit their own evidence.</p>
     </div>
     <div class="feat">
-      <h4>It refuses to rule on a partial view</h4>
-      <p>If the artifact exceeds the readable window the contract returns INCONCLUSIVE and holds the escrow. We measured validators agreeing unanimously on false answers when evidence was truncated.</p>
+      <h4>It refuses to rule on what it cannot see</h4>
+      <p>If the artifact overflows the readable window, or the fetch returns a rate-limit notice, an API error or a 404 page instead of the artifact, the contract returns INCONCLUSIVE, holds the escrow and never convenes the jury. Validators agree unanimously on false answers when they are shown the wrong bytes.</p>
     </div>
     <div class="feat">
       <h4>Appeals cost money</h4>
@@ -178,27 +178,40 @@ footer a{color:var(--muted)}
   <div class="quote">
     <strong>Free text in a compared answer prevents consensus.</strong> An earlier version asked validators for a per-criterion reason string and told the equivalence principle to ignore it. Four leader rotations, UNDETERMINED, with identical booleans from every leader. Removing the field fixed it on the first attempt.
   </div>
-  <p class="sub">Both findings, and five more undocumented GenVM behaviours, are written up in the <a href="https://github.com/Makabeez/bountycourt-app">repository</a> and the <a href="https://github.com/Makabeez/webclaims">WebClaims study</a>.</p>
+  <div class="quote">
+    <strong>A ruling is only as deterministic as the bytes fetched.</strong> A commit-pinned URL cannot change, but the response to it can: a rate-limited GitHub API answers with an error object, and every validator receives the same one. They agree on it perfectly. Before v6 that agreement became a REJECTED verdict and the hunter lost the escrow for work they had done.
+  </div>
+  <p class="sub">These findings, and five more undocumented GenVM behaviours, are written up in the <a href="https://github.com/Makabeez/bountycourt-app">repository</a> and the <a href="https://github.com/Makabeez/webclaims">WebClaims study</a>.</p>
 </section>
 
 <section>
-  <h2>Verified on Bradbury</h2>
+  <h2>Verified on chain</h2>
   <table>
     <tr><th>What</th><th>Result</th><th>Transaction</th></tr>
     <tr>
+      <td>v6 on Studio Next — real artifact</td>
+      <td>RULED APPROVED, 2 of 2 criteria, 1 GEN held pending release or appeal</td>
+      <td><a class="mono" href="https://explorer-studio-dev.genlayer.com/tx/0x8a60067e929313c325e9f5dbbdca6669f8b5825248931b5025b0d165d3390e1c">0x8a60067e…</a></td>
+    </tr>
+    <tr>
+      <td>v6 on Studio Next — fetch returned an error</td>
+      <td>INCONCLUSIVE, "source returned an API error object", jury never convened, 1 GEN held, retry allowed</td>
+      <td><a class="mono" href="https://explorer-studio-dev.genlayer.com/tx/0x7b97df3ce4a151bc1214e8cd21a8506d6721580ac932219f5d33834d82f86466">0x7b97df3c…</a></td>
+    </tr>
+    <tr>
       <td>Ruling holds the escrow</td>
       <td>RULED, 1 GEN retained, then SETTLED on release</td>
-      <td><a class="mono" href="https://explorer-bradbury.genlayer.com/tx/0x410d32778c331c990065a2a80867af8415c3dd48eafdd798987d2fc7e81c2d91">0x410d3277…</a></td>
+      <td><a class="mono" href="https://explorer-bradbury.genlayer.com/tx/0x410d32778c331c990065a2a80867af8415c3dd48eafdd798987d2fc7e81c2d91">0x410d3277…</a> <span class="note">Bradbury</span></td>
     </tr>
     <tr>
       <td>Truncated artifact refused</td>
       <td>INCONCLUSIVE, 20,365 bytes vs a 6,000-char window, jury never convened</td>
-      <td><a class="mono" href="https://explorer-bradbury.genlayer.com/tx/0x17ed43bb20b4ad272c440d2b672ba90fae3db07dddbeeab7f2795f57edd85e5f">0x17ed43bb…</a></td>
+      <td><a class="mono" href="https://explorer-bradbury.genlayer.com/tx/0x17ed43bb20b4ad272c440d2b672ba90fae3db07dddbeeab7f2795f57edd85e5f">0x17ed43bb…</a> <span class="note">Bradbury</span></td>
     </tr>
     <tr>
       <td>Appeal staked and heard</td>
       <td>REJECTED → bond → second jury → upheld, 2 GEN to the original winner</td>
-      <td><a class="mono" href="https://explorer-bradbury.genlayer.com/tx/0x455165eccb72fad9efdf9f7734a2063b276370964b1f3847d6db2b0fe697c7ff">0x455165ec…</a></td>
+      <td><a class="mono" href="https://explorer-bradbury.genlayer.com/tx/0x455165eccb72fad9efdf9f7734a2063b276370964b1f3847d6db2b0fe697c7ff">0x455165ec…</a> <span class="note">Bradbury</span></td>
     </tr>
     <tr>
       <td>Mutable evidence rejected</td>
@@ -214,7 +227,7 @@ footer a{color:var(--muted)}
 <div class="wrap" id="app">
   <h2 style="font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px">Live court</h2>
   <h3 style="font-size:22px;font-weight:500;margin:0 0 6px">Read the contract</h3>
-  <p class="note" style="margin:0 0 20px;max-width:640px">The court below is live on GenLayer Bradbury. Bounties and their per-criterion rulings load automatically. Posting and appealing require sending value, so those steps are driven from the browser console — see the repository for the exact calls.</p>
+  <p class="note" style="margin:0 0 20px;max-width:640px">The court below is v6, live on GenLayer Studio Next. Bounties and their per-criterion rulings load automatically. Posting and appealing require sending value, so those steps are driven from the browser console — see the repository for the exact calls.</p>
 
   <div class="card">
     <div class="bar" style="justify-content:space-between">
@@ -229,10 +242,10 @@ footer a{color:var(--muted)}
   <div class="card">
     <h3>Court</h3>
     <label>Contract address</label>
-    <input id="addr" value="0x1e68256A8Fc62c513691886a6230f00F3b4DdE7D" spellcheck="false">
+    <input id="addr" value="0xDc069a180522D80F28dea7DF96FCCd121707F714" spellcheck="false">
     <button id="load">Load court</button>
     <div class="bar" style="margin-top:12px"><span id="court">—</span></div>
-    <p class="note">v5 with appeals is prefilled. Earlier versions are listed in the repository.</p>
+    <p class="note">v6 on Studio Next is prefilled. v1–v5 ran on Bradbury, which is being retired; their addresses and transactions are in the repository.</p>
   </div>
 
   <div class="card">
@@ -248,20 +261,37 @@ footer a{color:var(--muted)}
 
 <div class="wrap"><footer>
   BountyCourt · <a href="https://github.com/Makabeez/bountycourt-app">source</a> ·
-  <a href="https://explorer-bradbury.genlayer.com/address/0x1e68256A8Fc62c513691886a6230f00F3b4DdE7D">contract</a> ·
+  <a href="https://explorer-studio-dev.genlayer.com/address/0xDc069a180522D80F28dea7DF96FCCd121707F714">contract</a> ·
   built on <a href="https://genlayer.com">GenLayer</a> · MIT
 </footer></div>
 
 <script type="module">
-import { createClient } from "https://esm.sh/genlayer-js@latest";
-import { testnetBradbury } from "https://esm.sh/genlayer-js@latest/chains";
+// The SDK is loaded dynamically with a fallback CDN and a visible failure.
+// A static import that fails takes the whole module down silently and the
+// page looks dead with no indication why.
+const CDNS = [
+  "https://esm.sh/genlayer-js@2.0.0-rc.1",
+  "https://cdn.jsdelivr.net/npm/genlayer-js@2.0.0-rc.1/+esm",
+];
+let createClient, studioDevnet, sdkError = null;
+async function loadSdk() {
+  for (const base of CDNS) {
+    try {
+      const main = await import(base);
+      const chains = await import(base.includes("jsdelivr") ? base.replace("/+esm", "/chains/+esm") : base + "/chains");
+      createClient = main.createClient;
+      studioDevnet = chains.studioDevnet;
+      return base;
+    } catch (e) { sdkError = e; }
+  }
+  return null;
+}
 
 const $ = id => document.getElementById(id);
 const log = m => { $("log").textContent = new Date().toLocaleTimeString() + "  " + m + "\n" + $("log").textContent; };
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-const readClient = createClient({ chain: testnetBradbury });
-let writeClient = null, account = null, contract = null;
+let readClient = null, writeClient = null, account = null, contract = null;
 
 const wallets = new Map();
 function renderWallets() {
@@ -275,6 +305,25 @@ window.addEventListener("eip6963:announceProvider", e => {
 });
 window.dispatchEvent(new Event("eip6963:requestProvider"));
 setTimeout(renderWallets, 400);
+setTimeout(renderWallets, 1200);
+setTimeout(() => { window.dispatchEvent(new Event("eip6963:requestProvider")); renderWallets(); }, 1500);
+setTimeout(renderWallets, 3000);
+
+async function ensureChain(p) {
+  try {
+    await p.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0xf22d" }] });
+  } catch (e) {
+    try {
+      await p.request({ method: "wallet_addEthereumChain", params: [{
+        chainId: "0xf22d",
+        chainName: "GenLayer Studio Next",
+        rpcUrls: ["https://studio-next.genlayer.com/api"],
+        nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 },
+        blockExplorerUrls: ["https://explorer-studio-dev.genlayer.com"]
+      }] });
+    } catch (e2) { log("chain switch skipped: " + (e2.message || e2)); }
+  }
+}
 
 $("conn").onclick = async () => {
   const v = $("wsel").value;
@@ -283,9 +332,9 @@ $("conn").onclick = async () => {
   try {
     const [a] = await p.request({ method: "eth_requestAccounts" });
     account = a;
-    writeClient = createClient({ chain: testnetBradbury, account: a, provider: p });
-    try { await writeClient.connect("testnetBradbury"); }
-    catch (e) { log("chain switch skipped: " + (e.message || e)); }
+    if (!createClient) return log("SDK not loaded, cannot connect");
+    await ensureChain(p);
+    writeClient = createClient({ chain: studioDevnet, account: a, provider: p });
     $("conn").textContent = "Connected";
     $("net").textContent = a.slice(0, 6) + "…" + a.slice(-4);
     log("connected " + a);
@@ -295,6 +344,7 @@ $("conn").onclick = async () => {
 async function loadCourt() {
   const a = $("addr").value.trim();
   if (!a.startsWith("0x")) return log("enter a contract address");
+  if (!readClient) return log("SDK not loaded");
   contract = a;
   try {
     const name = await readClient.readContract({ address: contract, functionName: "get_court_name", args: [] });
@@ -310,7 +360,7 @@ async function refresh() {
   if (!contract) return;
   try {
     const all = await readClient.readContract({ address: contract, functionName: "list_bounties", args: [] });
-    const entries = Object.entries(all || {});
+    const entries = all instanceof Map ? [...all.entries()] : Object.entries(all || {});
     if (!entries.length) { $("list").innerHTML = '<p class="note" style="margin:0">No bounties yet.</p>'; return; }
     $("list").innerHTML = entries.reverse().map(([id, raw]) => {
       const b = JSON.parse(raw);
@@ -331,7 +381,20 @@ async function refresh() {
   } catch (e) { log("refresh failed: " + (e.message || e)); }
 }
 
-loadCourt();
+(async () => {
+  const used = await loadSdk();
+  if (!used) {
+    const msg = "Could not load the GenLayer SDK from any CDN. " + (sdkError?.message || "");
+    log(msg);
+    $("list").innerHTML = '<p class="note" style="margin:0;color:var(--no)">' + esc(msg) +
+      '<br><br>The contract is live regardless — read it directly at ' +
+      '<a href="https://explorer-studio-dev.genlayer.com/address/0xDc069a180522D80F28dea7DF96FCCd121707F714">the explorer</a>.</p>';
+    return;
+  }
+  log("SDK loaded from " + used);
+  readClient = createClient({ chain: studioDevnet });
+  loadCourt();
+})();
 </script>
 </body>
 </html>
